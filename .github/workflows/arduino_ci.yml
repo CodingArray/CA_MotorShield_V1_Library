@@ -1,0 +1,19 @@
+name: Arduino_CI  # 워크플로우의 이름 설정
+
+on: [pull_request]  # 워크플로우를 실행할 이벤트 설정 (pull request가 열릴 때 실행)
+
+jobs:
+  arduino_ci:
+    runs-on: ubuntu-latest  # 워크플로우가 실행될 환경 설정 (Ubuntu 최신 버전 사용)
+
+    steps:
+      - uses: actions/checkout@v3  # GitHub Actions를 사용하여 코드를 체크아웃하는 단계 추가
+
+      - uses: Arduino-CI/action@stable-1.x  # Arduino CI 액션 사용
+        env:
+          USE_SUBDIR: .  # 라이브러리의 경로 설정 (기본값은 현재 디렉토리)
+          EXPECT_EXAMPLES: false  # 예제 코드가 없는 경우 테스트를 실패로 처리할지 여부 설정
+          EXPECT_UNITTESTS: false  # 유닛 테스트가 없는 경우 테스트를 실패로 처리할지 여부 설정
+          # 커스텀 라이브러리 설치 스크립트가 필요한 경우, 스크립트 파일의 경로 설정
+          # 이 스크립트는 Arduino 라이브러리 디렉토리에서 실행됩니다.
+          # CUSTOM_INIT_SCRIPT: install_dependencies.sh
