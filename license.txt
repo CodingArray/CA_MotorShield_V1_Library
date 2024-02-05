@@ -1,4 +1,4 @@
-MIT License
+MIT License (MIT)
 
 CA_MotorShield Library Copyright Notice:
 
