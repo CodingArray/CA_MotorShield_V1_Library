@@ -59,25 +59,32 @@ static uint8_t microstepcurve[] = {0,   25,  50,  74,  98,  120, 141, 162, 180,
 //
 //  Constructor
 //
-CA_MotorShield::CA_MotorShield(const uint8_t deviceAddress, TwoWire *wire)
-{
-  _address         = deviceAddress;
-  _wire            = wire;
-  _channelCount    = 16;
-  _error           = PCA9685_OK;
-  _OutputEnablePin = 255;
-
-  // Wire.begin()를 호출하여 초기화
-  _wire->begin();
+// Constructor: Initializes the motor shield with a specific I2C address and wire interface
+CA_MotorShield::CA_MotorShield(const uint8_t deviceAddress, TwoWire *wire) : _address(deviceAddress), _wire(wire) {
+  _wire->begin(); // Start I2C communication
 }
 
-bool CA_MotorShield::begin(uint8_t mode1_mask, uint8_t mode2_mask)
-{
-  if (! isConnected()) return false;
-  configure(mode1_mask, mode2_mask);
+// Default begin function: Initializes the motor shield with default settings
+bool CA_MotorShield::begin() {
+  if (!isConnected()) return false; // Check if shield is connected
+  uint8_t mode1_mask = PCA9685_MODE1_AUTOINCR | PCA9685_MODE1_ALLCALL; // Default mode1 settings
+  uint8_t mode2_mask = PCA9685_MODE2_TOTEMPOLE; // Default mode2 settings
+  configure(mode1_mask, mode2_mask); // Apply configuration settings
+  allChannelInitialize(); // Initialize all PWM channels
+  setFrequency(_freq); // Set to default frequency
+  return true; // Initialization successful
+}
 
-  allChannelInitialize(); // PWM 채널 초기화
-  return true;
+// Overloaded begin function: Initializes the motor shield with a specified PWM frequency
+bool CA_MotorShield::begin(uint16_t pwmFrequency) {
+  if (!isConnected()) return false; // Check if shield is connected
+  _freq = pwmFrequency; // Set the specified frequency
+  uint8_t mode1_mask = PCA9685_MODE1_AUTOINCR | PCA9685_MODE1_ALLCALL; // Default mode1 settings
+  uint8_t mode2_mask = PCA9685_MODE2_TOTEMPOLE; // Default mode2 settings
+  configure(mode1_mask, mode2_mask); // Apply configuration settings
+  allChannelInitialize(); // Initialize all PWM channels
+  setFrequency(_freq); // Set the PWM frequency as specified
+  return true; // Initialization successful
 }
 
 uint8_t CA_MotorShield::configure(uint8_t mode1_mask, uint8_t mode2_mask)
@@ -138,7 +145,6 @@ uint8_t CA_MotorShield::setMode1(uint8_t value)
 {
   return writeMode(PCA9685_MODE1, value);
 }
-
 
 uint8_t CA_MotorShield::setMode2(uint8_t value)
 {
@@ -465,10 +471,7 @@ uint8_t CA_MotorShield::readReg(uint8_t reg)
 // -- END OF FILE --
 void CA_MotorShield::setPin(uint8_t pin, boolean value)
 {
-  if (value == LOW)
-    write1(pin, LOW);
-  else
-    write1(pin, HIGH);
+    write1(pin, value);
 }
 
 CA_DCMotor *CA_MotorShield::getMotor(uint8_t num) {
@@ -557,37 +560,52 @@ CA_DCMotor::CA_DCMotor(void) {
   PWMpin = IN1pin = IN2pin = 0;
 }
 
+// Controls the motor's direction of rotation
 void CA_DCMotor::run(uint8_t cmd) {
   switch (cmd) {
-  case FORWARD:
-    MC->setPin(IN2pin, LOW); // take low first to avoid 'break'
-    MC->setPin(IN1pin, HIGH);
-    break;
-  case BACKWARD:
-    MC->setPin(IN1pin, LOW); // take low first to avoid 'break'
-    MC->setPin(IN2pin, HIGH);
-    break;
-  case RELEASE:
-    MC->setPin(IN1pin, LOW);
-    MC->setPin(IN2pin, LOW);
-    break;
+    case FORWARD:
+      //모터 방향 전환 간 급격한 전류 증가를 방지함
+      MC->setPin(IN2pin, LOW); // Set both control pins low
+      MC->setPin(IN1pin, LOW); // to stop the motor
+      delay(5); // Short delay to ensure the setup is stable
+      MC->setPin(IN2pin, LOW); // FORWARD 핀 전환
+      MC->setPin(IN1pin, HIGH); 
+      break;
+    case BACKWARD:
+      //모터 방향 전환 간 급격한 전류 증가를 방지함
+      MC->setPin(IN1pin, LOW); // Set both control pins low
+      MC->setPin(IN2pin, LOW); // to stop the motor
+      delay(5); // Short delay to ensure the setup is stable
+      MC->setPin(IN1pin, LOW); // BACKWARD 핀 전환
+      MC->setPin(IN2pin, HIGH); 
+      break;
+    case RELEASE:
+      // Stop the motor
+      MC->setPin(IN1pin, LOW); // Set both control pins low
+      MC->setPin(IN2pin, LOW); // to stop the motor
+      break;
   }
 }
 
-void CA_DCMotor::setSpeed(uint8_t speed) {
-  MC->setPWM(PWMpin, speed * 16);
+// Sets the motor's speed
+void CA_DCMotor::setSpeed(uint16_t speed) {
+  // Use the Arduino map function to convert the speed value from 0-100 to 0-2400
+  uint16_t pwmValue = map(speed, 0, 100, 0, 2400);
+  // Set the PWM value to control the motor speed
+  MC->setPWM(PWMpin, pwmValue);
+}
+
+// Sets the motor's speed without a limit, mapping from a 0-255 range to a 0-4095 range using the Arduino map function
+void CA_DCMotor::setSpeedNoLimit(uint16_t speed) {
+  // Use the Arduino map function to map the speed value from 0-255 to 0-4095
+  uint16_t pwmValue = map(speed, 0, 255, 0, 4095);
+
+  // Set the PWM value to control the motor speed
+  MC->setPWM(PWMpin, pwmValue);
 }
 
 void CA_DCMotor::setSpeedFine(uint16_t speed) {
   MC->setPWM(PWMpin, speed > 4095 ? 4095 : speed);
-}
-
-void CA_DCMotor::fullOn() { 
-  MC->setPWM(PWMpin, 4096, 0); 
-}
-
-void CA_DCMotor::fullOff() { 
-  MC->setPWM(PWMpin, 0, 4096); 
 }
 
 /******************************************

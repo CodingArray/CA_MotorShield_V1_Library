@@ -20,21 +20,24 @@
  * MIT License - all text here must be included in any redistribution.
  *
  */
-
+#include <AccelStepper.h>
 #include <CA_MotorShield.h>
 
 // Initialize CA_MotorShield objects for two shields
 CA_MotorShield AFMSbot(0x61); // Rightmost jumper closed
 CA_MotorShield AFMStop(0x60); // Default address, no jumpers
 
-// Connect two steppers to the top shield
+// Connect two steppers with 200 steps per revolution (1.8 degree)
+// to the top shield
 CA_StepperMotor *myStepper1 = AFMStop.getStepper(200, 1);
 CA_StepperMotor *myStepper2 = AFMStop.getStepper(200, 2);
 
-// Connect one stepper to the bottom shield
+// Connect one stepper with 200 steps per revolution (1.8 degree)
+// to the bottom shield
 CA_StepperMotor *myStepper3 = AFMSbot.getStepper(200, 2);
 
-// Function wrappers for each motor
+// you can change these to DOUBLE or INTERLEAVE or MICROSTEP!
+// wrappers for the first motor!
 void forwardStep1() { myStepper1->onestep(FORWARD, SINGLE); }
 void backwardStep1() { myStepper1->onestep(BACKWARD, SINGLE); }
 void forwardStep2() { myStepper2->onestep(FORWARD, DOUBLE); }
@@ -42,10 +45,10 @@ void backwardStep2() { myStepper2->onestep(BACKWARD, DOUBLE); }
 void forwardStep3() { myStepper3->onestep(FORWARD, INTERLEAVE); }
 void backwardStep3() { myStepper3->onestep(BACKWARD, INTERLEAVE); }
 
-// Wrap the steppers in CA_Stepper objects
-CA_Stepper stepper1(forwardStep1, backwardStep1);
-CA_Stepper stepper2(forwardStep2, backwardStep2);
-CA_Stepper stepper3(forwardStep3, backwardStep3);
+// Now we'll wrap the 3 steppers in an AccelStepper object
+AccelStepper stepper1(forwardStep1, backwardStep1);
+AccelStepper stepper2(forwardStep2, backwardStep2);
+AccelStepper stepper3(forwardStep3, backwardStep3);
 
 void setup() {
   AFMSbot.begin(); // Start the bottom shield

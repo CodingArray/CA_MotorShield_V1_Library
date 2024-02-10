@@ -10,18 +10,18 @@
 
 #include <CA_MotorShield.h>
 
-CA_MotorShield DC_Motor(0x60); // Create an object and pass the parameter
+CA_MotorShield dcMotor(0x60); // Create an object and pass the parameter
 
-CA_DCMotor *motor1 = DC_Motor.getMotor(1); // Get motor 1
-CA_DCMotor *motor2 = DC_Motor.getMotor(2); // Get motor 2
-CA_DCMotor *motor3 = DC_Motor.getMotor(3); // Get motor 3
-CA_DCMotor *motor4 = DC_Motor.getMotor(4); // Get motor 4
+CA_DCMotor *motor1 = dcMotor.getMotor(1); // Get motor 1
+CA_DCMotor *motor2 = dcMotor.getMotor(2); // Get motor 2
+CA_DCMotor *motor3 = dcMotor.getMotor(3); // Get motor 3
+CA_DCMotor *motor4 = dcMotor.getMotor(4); // Get motor 4
 
 void setup() {
   Serial.begin(115200);
 
-  DC_Motor.begin(); // Initialize the motor shield
-  DC_Motor.setFrequency(1600); // Set the PWM frequency
+  dcMotor.begin(); // Initialize the motor shield
+  dcMotor.setFrequency(1600); // Set the PWM frequency
 
   // Set motor1 to move forward and set its speed
   motor1->setSpeed(150);
@@ -60,7 +60,7 @@ void setup() {
   delay(500); // Wait for 500 milliseconds
 
   // Reset all channels to their initial state
-  DC_Motor.allChannelInitialize();
+  dcMotor.allChannelInitialize();
 }
 
 void loop() {

@@ -1,7 +1,7 @@
 // ---------------------------------------------------------------------------
 // Created by Coding Array - we@CodingArray.cc
 // Copyright 2012 License: GNU GPL v3 http://www.gnu.org/licenses/gpl-3.0.html
-// Ultrasonic Obstacle Avoidance 4WD Rubber Wheel + 4WD Mecanum  Wheel
+// Ultrasonic Obstacle Avoidance Example for 4WD Rubber Wheel + 4WD Mecanum  Wheel
 // ---------------------------------------------------------------------------
 
 #include <CA_MotorShield.h>        // 코딩어레이 모터 쉴드 라이브러리 포함
@@ -13,29 +13,34 @@
 #define MAX_DISTANCE 300  // 초음파 센서가 감지할 수 있는 최대 거리 설정 (300cm)
 
 // 모터 속도 설정
-#define MIN_SPEED 80  // 모터가 돌 수 있는 최소 속도( TT모터 스타트 업 토크 = PWM 값 80 )
+#define MIN_SPEED 40  // 모터가 동작하기 시작하는 최소 속도, 속도 최대값을 100으로 조절할 때의 기준값
 
-#define FORWARD_SPEED 150   // 전진 최대 속도(PWM 값), 초음파 센서 감지를 위해 보다 천천히 전진
-#define BACKWARD_SPEED 150  // 후진 최대 속도(PWM 값)
-#define TURN_SPEED 180      // 좌회전, 우회전 최대 속도(PWM 값) : 속도 값을 변경하면 회전 각도 변경
+#define FORWARD_SPEED 80   // 전진 시 설정 가능한 최대 속도, 속도 최대값 100 중 80으로 설정하여 안정적인 전진을 위함
+#define BACKWARD_SPEED 80  // 후진 시 설정 가능한 최대 속도, 속도 최대값 100 중 80으로 설정
+#define TURN_SPEED 100     // 좌회전 및 우회전 시 설정 가능한 최대 속도, 속도 최대값을 100으로 설정
 
 #define OBSTACLE_THRESHOLD 80  // 장애물을 감지하는 거리 임계값 (80cm)
 
-// 모터 쉴드와 모터 초기화
-CA_MotorShield DC_Motor(0x60);  // 모터 쉴드 객체 생성
-CA_DCMotor *motor1 = DC_Motor.getMotor(1);         // 첫 번째 모터 연결
-CA_DCMotor *motor2 = DC_Motor.getMotor(2);         // 두 번째 모터 연결
-CA_DCMotor *motor3 = DC_Motor.getMotor(3);         // 세 번째 모터 연결
-CA_DCMotor *motor4 = DC_Motor.getMotor(4);         // 네 번째 모터 연결
+// 모터 쉴드 객체를 생성하고 I2C 주소를 초기화합니다.
+CA_MotorShield dcMotor(0x60);
+
+// 각 모터에 대한 포인터를 초기화합니다.
+CA_DCMotor *motor1 = dcMotor.getMotor(1);         // 첫 번째 모터 연결
+CA_DCMotor *motor2 = dcMotor.getMotor(2);         // 두 번째 모터 연결
+CA_DCMotor *motor3 = dcMotor.getMotor(3);         // 세 번째 모터 연결
+CA_DCMotor *motor4 = dcMotor.getMotor(4);         // 네 번째 모터 연결
 
 // 초음파 센서 객체 생성
 NewPing sonar(TRIGGER_PIN, ECHO_PIN, MAX_DISTANCE);  // 초음파 센서 설정
 
-// RC카의 이동 방향을 나타내는 상수 정의
-#define C_LEFT 1      // 좌회전
-#define C_RIGHT 2     // 우회전
-#define C_FORWARD 3   // 전진
-#define C_BACKWARD 4  // 후진
+// 코딩어레이 스마트 RC카 방향 전환 제어 상수
+// 이 상수들은 메카넘 휠을 장착한 코딩어레이 스마트 RC카의 다양한 이동 및 회전 동작을 정의합니다.
+// 각 상수는 RC카의 특정한 동작 모드를 나타내며, 이를 통해 RC카를 다양한 방향으로 조작할 수 있습니다.
+#define CMD_RELEASE 0           // 정지: 코딩어레이 스마트 RC카를 정지시킵니다.
+#define CMD_FORWARD 1           // ↑: 코딩어레이 스마트 RC카를 전진시킵니다.
+#define CMD_BACKWARD 2          // ↓: 코딩어레이 스마트 RC카를 후진시킵니다.
+#define CMD_LEFT 3              // ←: 코딩어레이 스마트 RC카를 좌측으로 회전시킵니다.
+#define CMD_RIGHT 4             // →: 코딩어레이 스마트 RC카를 우측으로 회전시킵니다.
 
 /**
  * @brief RC카의 초기 설정을 수행하는 함수입니다.
@@ -52,7 +57,8 @@ void setup() {
   Serial.begin(9600);                       // 시리얼 통신을 9600 보드레이트로 시작합니다. 이를 통해 컴퓨터와 데이터를 주고받을 수 있습니다.
   Serial.println("........Start........");  // 시리얼 모니터에 "........Start........"을 출력합니다. 이는 프로그램이 시작되었음을 나타냅니다.
 
-  if (!DC_Motor.begin()) {                                           // 모터 쉴드를 기본 주파수인 1.6KHz로 시작합니다. 만약 모터 쉴드를 찾지 못하면 오류 메시지를 출력합니다.
+  // 모터 쉴드를 초기화 및 모터의 동작 주파수를 1.6Khz로 설정합니다.
+  if (!dcMotor.begin()) {                                           // 모터 쉴드를 기본 주파수인 1.6KHz로 시작합니다. 만약 모터 쉴드를 찾지 못하면 오류 메시지를 출력합니다.
     Serial.println("모터 쉴드를 찾을 수 없습니다. 배선을 확인하세요.");  // 모터 쉴드를 찾지 못했다는 메시지를 시리얼 모니터에 출력합니다.
     while (1)
       ;  // 무한 루프에 빠져 프로그램을 멈춥니다. 이는 모터 쉴드가 제대로 연결되지 않았을 경우를 나타냅니다.
@@ -86,8 +92,9 @@ void loop() {
     backwardLeftTurn(500);  //0.5초간 대기하여 RC카가 회전 후 안정화될 수 있도록 합니다.
   } else {
     // 장애물이 멀리 있을 경우, RC카는 계속 전진합니다.
-    setMotorsDirection(C_FORWARD, FORWARD_SPEED);  // RC카를 전진 방향으로 설정하고 전진합니다.
+    setMotorsDirection(CMD_FORWARD, FORWARD_SPEED);  // RC카를 전진 방향으로 설정하고 전진합니다.
     delay(500);                  // 대기시간 동안 대기하여 RC카가 회전 후 안정화될 수 있도록 합니다. 
+  }
 }
 
 /**
@@ -103,10 +110,10 @@ void loop() {
  */
 void backwardLeftTurn(unsigned long delayTime) {
   StopAllMotors();                                  // RC카가 정지합니다.
-  setMotorsDirection(C_BACKWARD, BACKWARD_SPEED);   // RC카를 후진 방향으로 설정하고 후진 속도로 이동을 시작합니다.
+  setMotorsDirection(CMD_BACKWARD, BACKWARD_SPEED);   // RC카를 후진 방향으로 설정하고 후진 속도로 이동을 시작합니다.
   StopAllMotors();                                  // RC카가 정지합니다.
   delay(delayTime);                                 // 대기시간 동안 대기하여 RC카가 회전 후 안정화될 수 있도록 합니다.
-  setMotorsDirection(C_LEFT, TURN_SPEED);           // RC카의 방향을 왼쪽으로 변경하고 회전 속도로 회전을 시작합니다.
+  setMotorsDirection(CMD_LEFT, TURN_SPEED);           // RC카의 방향을 왼쪽으로 변경하고 회전 속도로 회전을 시작합니다.
   StopAllMotors();                                  // RC카가 정지합니다.
   delay(delayTime);                                 // 대기시간 동안 대기하여 RC카가 회전 후 안정화될 수 있도록 합니다.
 }
@@ -148,27 +155,27 @@ unsigned int measureDistance() {
  * 전진, 후진 등의 방향에 따라 모터들의 회전 방향을 설정합니다. 이를 통해 RC카가
  * 원하는 방향으로 움직일 수 있도록 합니다.
  *
- * @param direction 설정할 모터의 방향. C_LEFT, C_RIGHT, C_FORWARD, C_BACKWARD 중 하나를 사용합니다.
+ * @param direction 설정할 모터의 방향. CMD_LEFT, CMD_RIGHT, CMD_FORWARD, CMD_BACKWARD 중 하나를 사용합니다.
  * @param speed 모터가 도달할 속도. 이 속도는 감속 또는 증가됩니다.
  */
 void setMotorsDirection(uint8_t direction, uint8_t speed) {
   // 모터의 방향을 설정합니다.
-  if (direction == C_LEFT) {
+  if (direction == CMD_LEFT) {
     motor1->run(BACKWARD);  // 1번 모터를 뒤로 돌려 왼쪽으로 회전시킵니다.
     motor2->run(BACKWARD);  // 2번 모터도 뒤로 돌려 왼쪽으로 회전시킵니다.
     motor3->run(FORWARD);   // 3번 모터를 앞으로 돌려 왼쪽으로 회전시킵니다.
     motor4->run(FORWARD);   // 4번 모터도 앞으로 돌려 왼쪽으로 회전시킵니다.
-  } else if (direction == C_RIGHT) {
+  } else if (direction == CMD_RIGHT) {
     motor1->run(FORWARD);   // 1번 모터를 앞으로 돌려 오른쪽으로 회전시킵니다.
     motor2->run(FORWARD);   // 2번 모터도 앞으로 돌려 오른쪽으로 회전시킵니다.
     motor3->run(BACKWARD);  // 3번 모터를 뒤로 돌려 오른쪽으로 회전시킵니다.
     motor4->run(BACKWARD);  // 4번 모터도 뒤로 돌려 오른쪽으로 회전시킵니다.
-  } else if (direction == C_FORWARD) {
+  } else if (direction == CMD_FORWARD) {
     motor1->run(FORWARD);  // 모든 모터를 앞으로 돌려 RC카가 전진하도록 합니다.
     motor2->run(FORWARD);
     motor3->run(FORWARD);
     motor4->run(FORWARD);
-  } else if (direction == C_BACKWARD) {
+  } else if (direction == CMD_BACKWARD) {
     motor1->run(BACKWARD);  // 모든 모터를 뒤로 돌려 RC카가 후진하도록 합니다.
     motor2->run(BACKWARD);
     motor3->run(BACKWARD);

@@ -22,11 +22,14 @@
  * MIT License - all text here must be included in any redistribution.
  *
  */
-
+#include <AccelStepper.h>
 #include <CA_MotorShield.h>
 
 // Create the motor shield object with the default I2C address
-CA_MotorShield STEP_Motor(0x60); // Adjust the I2C address as needed
+CA_MotorShield STEP_Motor = CA_MotorShield(); // default address 0x60 
+// Or, create it with a different I2C address (say for stacking)
+// CA_MotorShield STEP_Motor = CA_MotorShield(0x61);
+// CA_MotorShield STEP_Motor(0x62); // Adjust the I2C address as needed
 
 // Connect a stepper motor with 200 steps per revolution (1.8 degree)
 // to motor port #1 and #2 respectively
@@ -40,7 +43,7 @@ void backwardStep() {
 }
 
 // Use functions to step
-CA_Stepper Astepper1 = CA_Stepper(forwardStep, backwardStep);
+AccelStepper Astepper1(forwardStep, backwardStep);
 
 void setup() {
   Serial.begin(115200); // set up Serial library at 115200 bps

@@ -44,8 +44,6 @@
 
 #include "Wire.h"
 
-
-//
 #define MOTORDEBUG 0
 
 #define MICROSTEPS 16  // 8 or 16
@@ -59,7 +57,6 @@
 #define DOUBLE 2
 #define INTERLEAVE 3
 #define MICROSTEP 4
-//
 
 // ERROR CODES
 #define PCA9685_OK                  0x00
@@ -71,7 +68,6 @@
 //  get/setFrequency()
 #define PCA9685_MIN_FREQ              24
 #define PCA9685_MAX_FREQ            1526
-
 
 //  REGISTERS CONFIGURATION - check datasheet for details
 #define PCA9685_MODE1               0x00
@@ -128,10 +124,9 @@ public:
   friend class CA_MotorShield; ///< Let MotorShield create DCMotors
 
   void run(uint8_t);
-  void setSpeed(uint8_t);
+  void setSpeed(uint16_t);
+  void setSpeedNoLimit(uint16_t);
   void setSpeedFine(uint16_t speed);
-  void fullOn();
-  void fullOff();
 
 private:
   uint8_t PWMpin, IN1pin, IN2pin;
@@ -166,13 +161,12 @@ private:
 class CA_MotorShield {
 public:
 
-  explicit CA_MotorShield(const uint8_t deviceAddress, TwoWire *wire = &Wire);
+  explicit CA_MotorShield(const uint8_t deviceAddress = 0x60, TwoWire *wire = &Wire);
+  bool     begin();
+  bool     begin(uint16_t pwmFrequency); 
 
-  bool     begin(uint8_t mode1_mask = PCA9685_MODE1_AUTOINCR | PCA9685_MODE1_ALLCALL,
-                 uint8_t mode2_mask = PCA9685_MODE2_TOTEMPOLE);
   bool     isConnected();
   uint8_t  getAddress();
-
 
   /////////////////////////////////////////////////////
   //
@@ -190,7 +184,6 @@ public:
   uint8_t  setMode2(uint8_t value);
   uint8_t  getMode1();
   uint8_t  getMode2();
-
 
   /////////////////////////////////////////////////////
   //
@@ -227,7 +220,6 @@ public:
   //  experimental for 0.3.0
   void     allOFF();
 
-
   /////////////////////////////////////////////////////
   //
   //  SUB CALL  -  ALL CALL  (since 0.4.0)
@@ -245,7 +237,6 @@ public:
   bool     setAllCallAddress(uint8_t address);
   uint8_t  getAllCallAddress();
 
-
   /////////////////////////////////////////////////////
   //
   //  OE - Output Enable control
@@ -253,7 +244,6 @@ public:
   bool     setOutputEnablePin(uint8_t pin);
   bool     setOutputEnable(bool on);
   uint8_t  getOutputEnable();
-
 
   /////////////////////////////////////////////////////
   //
