@@ -1,7 +1,7 @@
 // ---------------------------------------------------------------------------
 // Created by Coding Array - we@CodingArray.cc
 // Copyright 2024 License: GNU GPL v3 http://www.gnu.org/licenses/gpl-3.0.html
-// Ultrasonic Obstacle Avoidance Example for 4WD Rubber Wheel + 4WD Mecanum  Wheel
+// IR RemoteControl Example for 4WD Rubber Wheel
 // ---------------------------------------------------------------------------
 
 #include <CA_MotorShield.h>
@@ -192,13 +192,13 @@ void setMotorsDirection(uint8_t direction, uint16_t speed) {
     motor3->run(RELEASE);
     motor4->run(RELEASE);
   } else if (direction == CMD_LEFT) {
-    // 왼쪽 회전을 위해 1번과 2번 모터는 뒤로, 3번과 4번 모터는 앞으로 설정합니다.
+    // 좌회전 명령을 받으면 1번과 2번 모터는 뒤로, 3번과 4번 모터는 앞으로 설정하여 제자리에서 좌회전을 합니다.
     motor1->run(BACKWARD);
     motor2->run(BACKWARD);
     motor3->run(FORWARD);
     motor4->run(FORWARD);
   } else if (direction == CMD_RIGHT) {
-    // 오른쪽 회전을 위해 1번과 2번 모터는 앞으로, 3번과 4번 모터는 뒤로 설정합니다.
+    // 우회전 명령을 받으면 1번과 2번 모터는 앞으로, 3번과 4번 모터는 뒤로 설정하여 제자리에서 우회전을 합니다.
     motor1->run(FORWARD);
     motor2->run(FORWARD);
     motor3->run(BACKWARD);
@@ -217,7 +217,7 @@ void setMotorsDirection(uint8_t direction, uint16_t speed) {
     motor4->run(BACKWARD);
   } 
 
-  if((direction != CMD_RELEASE) setMotorsSpeed(speed); // 모터가 도달할 속도입니다. 이 속도는 모터의 방향이 CMD_RELEASE가 아닐 때 적용됩니다.
+  if(direction != CMD_RELEASE) setMotorsSpeed(speed); // 모터가 도달할 속도입니다. 이 속도는 모터의 방향이 CMD_RELEASE가 아닐 때 적용됩니다.
 
 }
 

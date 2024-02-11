@@ -1,7 +1,7 @@
 // ---------------------------------------------------------------------------
 // Created by Coding Array - we@CodingArray.cc
 // Copyright 2024 License: GNU GPL v3 http://www.gnu.org/licenses/gpl-3.0.html
-// Ultrasonic Obstacle Avoidance Example for 4WD Rubber Wheel + 4WD Mecanum  Wheel
+// IR RemoteControl Example for 4WD Mecanum Wheel
 // ---------------------------------------------------------------------------
 
 #include <CA_MotorShield.h>
@@ -36,6 +36,16 @@ uint16_t controlSpeed = 70; // 모터의 초기 제어 속도를 70으로 설정
 #define CMD_BACKWARD 2            // ↓: 코딩어레이 스마트 RC카를 후진시킵니다.
 #define CMD_LEFT 3                // ←: 코딩어레이 스마트 RC카를 좌측으로 회전시킵니다.
 #define CMD_RIGHT 4               // →: 코딩어레이 스마트 RC카를 우측으로 회전시킵니다.
+#define CMD_FORWARD_LEFT 5        // ↖: 코딩어레이 스마트 RC카를 전방 좌측 대각선 방향으로 이동시킵니다.
+#define CMD_FORWARD_RIGHT 6       // ↗: 코딩어레이 스마트 RC카를 전방 우측 대각선 방향으로 이동시킵니다.
+#define CMD_BACKWARD_LEFT 7       // ↙: 코딩어레이 스마트 RC카를 후방 좌측 대각선 방향으로 이동시킵니다.
+#define CMD_BACKWARD_RIGHT 8      // ↘: 코딩어레이 스마트 RC카를 후방 우측 대각선 방향으로 이동시킵니다.
+#define CMD_TURNING_LEFT 9        // 제자리에서 좌측으로 회전: 코딩어레이 스마트 RC카를 제자리에서 좌측으로 회전시킵니다.
+#define CMD_TURNING_RIGHT 10      // 제자리에서 우측으로 회전: 코딩어레이 스마트 RC카를 제자리에서 우측으로 회전시킵니다.
+#define CMD_CURVED_LEFT 11        // 곡선 이동 좌측: 코딩어레이 스마트 RC카를 곡선을 그리며 좌측으로 이동시킵니다.
+#define CMD_CURVED_RIGHT 12       // 곡선 이동 우측: 코딩어레이 스마트 RC카를 곡선을 그리며 우측으로 이동시킵니다.
+#define CMD_LATERAL_ARC_LEFT 13   // 측면 아크 이동 좌측: 코딩어레이 스마트 RC카를 좌측으로 측면 아크(호) 형태로 이동시킵니다.
+#define CMD_LATERAL_ARC_RIGHT 14  // 측면 아크 이동 우측: 코딩어레이 스마트 RC카를 우측으로 측면 아크(호) 형태로 이동시킵니다.
 
 #define IR_RECEIVE_PIN 3    // IR 수신기를 연결할 아두이노의 핀 번호를 3번으로 설정합니다. 인터럽트 예제와 호환되도록 3번 핀을 사용합니다.
 //#define IR_SEND_PIN 3     // IR 송신기를 연결할 아두이노의 핀 번호를 3번으로 설정할 수 있습니다. 
@@ -148,6 +158,16 @@ void loop() {
           case 0x52: setMotorsDirection(CMD_BACKWARD, controlSpeed); break;          // 하단 ↓: 후진
           case 0x08: setMotorsDirection(CMD_LEFT, controlSpeed); break;              // 촤측 ←: 좌회전
           case 0x5A: setMotorsDirection(CMD_RIGHT, controlSpeed); break;             // 우측 →: 우회전
+          case 0x0C: setMotorsDirection(CMD_FORWARD_LEFT, controlSpeed); break;      // 좌측 상단 ↖: 전진 좌회전
+          case 0x5E: setMotorsDirection(CMD_FORWARD_RIGHT, controlSpeed); break;     // 우측 상단 ↗: 전진 우회전
+          case 0x42: setMotorsDirection(CMD_BACKWARD_LEFT, controlSpeed); break;     // 좌측 하단 ↙: 후진 좌회전
+          case 0x4A: setMotorsDirection(CMD_BACKWARD_RIGHT, controlSpeed); break;    // 우측 하단 ↘: 후진 우회전
+          case 0x07: setMotorsDirection(CMD_TURNING_LEFT, controlSpeed); break;      // 숫자 7: 제자리 좌회전
+          case 0x09: setMotorsDirection(CMD_TURNING_RIGHT, controlSpeed); break;     // 숫자 9: 제자리 우회전
+          case 0x44: setMotorsDirection(CMD_CURVED_LEFT, controlSpeed); break;       // 숫자 4: 곡선이동 좌측
+          case 0x43: setMotorsDirection(CMD_CURVED_RIGHT, controlSpeed); break;      // 숫자 6: 곡선이동 우측
+          case 0x45: setMotorsDirection(CMD_LATERAL_ARC_LEFT, controlSpeed); break;  // 숫자 1: 측면 아크 이동 좌측
+          case 0x47: setMotorsDirection(CMD_LATERAL_ARC_RIGHT, controlSpeed); break; // 숫자 3: 측면 아크 이동 우측
           case 0x16:
             // 전원 or +: 속도 증가
             if (controlSpeed < MAX_SPEED) controlSpeed += 5;
@@ -175,7 +195,10 @@ void loop() {
  * 따라서 RC카의 안정성을 향상시킵니다. 그 후 지정된 방향으로 모터의 회전 방향을 설정합니다.
  * CMD_RELEASE가 아닌 경우에만 지정된 속도로 모터의 속도를 조절하여, RC카가 원하는 방향으로 움직이도록 합니다.
  *
- * @param direction 설정할 모터의 방향입니다. CMD_LEFT, CMD_RIGHT, CMD_FORWARD, CMD_BACKWARD, CMD_RELEASE 중 하나를 사용합니다.
+ * @param direction 설정할 모터의 방향입니다. CMD_LEFT, CMD_RIGHT, CMD_FORWARD, CMD_BACKWARD, CMD_RELEASE,
+ *                  CMD_FORWARD_LEFT, CMD_FORWARD_RIGHT, CMD_BACKWARD_LEFT, CMD_BACKWARD_RIGHT,
+ *                  CMD_TURNING_LEFT, CMD_TURNING_RIGHT, CMD_CURVED_LEFT, CMD_CURVED_RIGHT, 
+                    CMD_LATERAL_ARC_LEFT, CMD_LATERAL_ARC_RIGHT 중 하나를 사용합니다.
  *                  CMD_RELEASE를 선택할 경우 모든 모터가 정지합니다.
  * @param speed 모터가 도달할 속도입니다. 이 속도는 모터의 방향이 CMD_RELEASE가 아닐 때 적용됩니다.
  *              속도는 pwm 신호로 조절됩니다.
@@ -191,34 +214,118 @@ void setMotorsDirection(uint8_t direction, uint16_t speed) {
     motor2->run(RELEASE);
     motor3->run(RELEASE);
     motor4->run(RELEASE);
+    setMotorsSpeed(speed);  // 지정된 속도로 모터의 속도를 조절합니다.
   } else if (direction == CMD_LEFT) {
-    // 왼쪽 회전을 위해 1번과 2번 모터는 뒤로, 3번과 4번 모터는 앞으로 설정합니다.
+    // 좌회전 명령을 받으면 1번과 3번 모터는 뒤로, 2번과 4번 모터는 앞으로 설정하여 제자리에서 좌회전을 합니다.
     motor1->run(BACKWARD);
-    motor2->run(BACKWARD);
-    motor3->run(FORWARD);
-    motor4->run(FORWARD);
-  } else if (direction == CMD_RIGHT) {
-    // 오른쪽 회전을 위해 1번과 2번 모터는 앞으로, 3번과 4번 모터는 뒤로 설정합니다.
-    motor1->run(FORWARD);
     motor2->run(FORWARD);
     motor3->run(BACKWARD);
+    motor4->run(FORWARD);
+    setMotorsSpeed(speed);  // 지정된 속도로 모터의 속도를 조절합니다.
+  } else if (direction == CMD_RIGHT) {
+    // 우회전 명령을 받으면 1번과 3번 모터는 앞으로, 2번과 4번 모터는 뒤로 설정하여 제자리에서 우회전을 합니다.
+    motor1->run(FORWARD);
+    motor2->run(BACKWARD);
+    motor3->run(FORWARD);
     motor4->run(BACKWARD);
+    setMotorsSpeed(speed);  // 지정된 속도로 모터의 속도를 조절합니다.
   } else if (direction == CMD_FORWARD) {
     // 전진을 위해 모든 모터를 앞으로 설정합니다.
     motor1->run(FORWARD);
     motor2->run(FORWARD);
     motor3->run(FORWARD);
     motor4->run(FORWARD);
+    setMotorsSpeed(speed);  // 지정된 속도로 모터의 속도를 조절합니다.
   } else if (direction == CMD_BACKWARD) {
     // 후진을 위해 모든 모터를 뒤로 설정합니다.
     motor1->run(BACKWARD);
     motor2->run(BACKWARD);
     motor3->run(BACKWARD);
     motor4->run(BACKWARD);
-  } 
-
-  if((direction != CMD_RELEASE) setMotorsSpeed(speed); // 모터가 도달할 속도입니다. 이 속도는 모터의 방향이 CMD_RELEASE가 아닐 때 적용됩니다.
-
+    setMotorsSpeed(speed);  // 지정된 속도로 모터의 속도를 조절합니다.
+  } else if (direction == CMD_FORWARD_LEFT) {
+    // 전방 좌측 대각선 이동 명령을 받으면 1번과 3번 모터는 정지, 2번과 4번 모터를 앞으로 설정합니다.
+    motor1->run(RELEASE);
+    motor2->run(FORWARD);
+    motor3->run(RELEASE);
+    motor4->run(FORWARD);
+    setMotorsSpeed(speed);  // 지정된 속도로 모터의 속도를 조절합니다.
+  } else if (direction == CMD_FORWARD_RIGHT) {
+    // 전방 우측 대각선 이동 명령을 받으면 1번과 3번 모터를 앞으로, 2번과 4번 모터는 정지로 설정합니다.
+    motor1->run(FORWARD);
+    motor2->run(RELEASE);
+    motor3->run(FORWARD);
+    motor4->run(RELEASE);
+    setMotorsSpeed(speed);  // 지정된 속도로 모터의 속도를 조절합니다.
+  } else if (direction == CMD_BACKWARD_LEFT) {
+    // 후방 좌측 대각선 이동 명령을 받으면 1번과 3번 모터를 뒤로, 2번과 4번 모터는 정지로 설정합니다.
+    motor1->run(BACKWARD);
+    motor2->run(RELEASE);
+    motor3->run(BACKWARD);
+    motor4->run(RELEASE);
+    setMotorsSpeed(speed);  // 지정된 속도로 모터의 속도를 조절합니다.
+  } else if (direction == CMD_BACKWARD_RIGHT) {
+    // 후방 우측 대각선 이동 명령을 받으면 1번과 3번 모터는 정지, 2번과 4번 모터를 뒤로 설정합니다.
+    motor1->run(RELEASE);
+    motor2->run(BACKWARD);
+    motor3->run(RELEASE);
+    motor4->run(BACKWARD);
+    setMotorsSpeed(speed);  // 지정된 속도로 모터의 속도를 조절합니다.
+  } else if (direction == CMD_TURNING_LEFT) {
+    // 제자리에서 좌측으로 회전 명령을 받으면 1번과 2번 모터는 뒤로, 3번과 4번 모터는 앞으로 설정합니다.
+    motor1->run(BACKWARD);
+    motor2->run(BACKWARD);
+    motor3->run(FORWARD);
+    motor4->run(FORWARD);
+    setMotorsSpeed(speed);  // 지정된 속도로 모터의 속도를 조절합니다.
+  } else if (direction == CMD_TURNING_RIGHT) {
+    // 제자리에서 우측으로 회전 명령을 받으면 1번과 2번 모터는 앞으로, 3번과 4번 모터는 뒤로 설정합니다.
+    motor1->run(FORWARD);
+    motor2->run(FORWARD);
+    motor3->run(BACKWARD);
+    motor4->run(BACKWARD);
+    setMotorsSpeed(speed);  // 지정된 속도로 모터의 속도를 조절합니다.
+  } else if (direction == CMD_CURVED_LEFT) {
+    // 곡선 이동 좌측 명령을 받으면 1번과 2번 모터를 앞으로 설정, 3번과 4번 모터는 정지 상태를 유지합니다.
+    motor1->run(FORWARD);
+    motor2->run(FORWARD);
+    motor3->run(RELEASE);
+    motor4->run(RELEASE);
+    motor1->setSpeed(speed);  // 지정된 속도로 1번 모터의 속도를 조절합니다.
+    motor2->setSpeed(speed);  // 지정된 속도로 2번 모터의 속도를 조절합니다.
+    //motor3->setSpeed(0);
+    //motor4->setSpeed(0);
+  } else if (direction == CMD_CURVED_RIGHT) {
+    // 곡선 이동 우측 명령을 받으면 3번과 4번 모터를 앞으로 설정, 1번과 2번 모터는 정지 상태를 유지합니다.
+    motor1->run(RELEASE);
+    motor2->run(RELEASE);
+    motor3->run(FORWARD);
+    motor4->run(FORWARD);
+    //motor1->setSpeed(0);
+    //motor2->setSpeed(0);
+    motor3->setSpeed(speed);  // 지정된 속도로 3번 모터의 속도를 조절합니다.
+    motor4->setSpeed(speed);  // 지정된 속도로 4번 모터의 속도를 조절합니다.
+  } else if (direction == CMD_LATERAL_ARC_LEFT) {
+    // 측면 아크 이동 좌측 명령을 받으면 1번 모터를 앞으로, 4번 모터를 뒤로 설정, 2번과 3번 모터는 정지 상태를 유지합니다.
+    motor1->run(FORWARD);
+    motor2->run(RELEASE);
+    motor3->run(RELEASE);
+    motor4->run(BACKWARD);
+    motor1->setSpeed(speed);  // 지정된 속도로 1번 모터의 속도를 조절합니다.
+    //motor2->setSpeed(0);
+    //motor3->setSpeed(0);
+    motor4->setSpeed(speed);  // 지정된 속도로 4번 모터의 속도를 조절합니다.
+  } else if (direction == CMD_LATERAL_ARC_RIGHT) {
+    // 측면 아크 이동 우측 명령을 받으면 1번 모터를 뒤로, 4번 모터를 앞으로 설정, 2번과 3번 모터는 정지 상태를 유지합니다.
+    motor1->run(BACKWARD);
+    motor2->run(RELEASE);
+    motor3->run(RELEASE);
+    motor4->run(FORWARD);
+    motor1->setSpeed(speed);  // 지정된 속도로 1번 모터의 속도를 조절합니다.
+    //motor2->setSpeed(0);
+    //motor3->setSpeed(0);
+    motor4->setSpeed(speed);  // 지정된 속도로 4번 모터의 속도를 조절합니다.
+  }
 }
 
 /**
