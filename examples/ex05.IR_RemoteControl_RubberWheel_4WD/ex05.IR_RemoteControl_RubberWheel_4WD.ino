@@ -1,7 +1,7 @@
 // ---------------------------------------------------------------------------
 // Created by Coding Array - we@CodingArray.cc
 // Copyright 2024 License: GNU GPL v3 http://www.gnu.org/licenses/gpl-3.0.html
-// IR RemoteControl Example for 4WD Rubber Wheel
+// IR Remote Control Example for 4WD Rubber Wheel
 // ---------------------------------------------------------------------------
 
 #include <CA_MotorShield.h>
@@ -42,7 +42,6 @@ uint16_t controlSpeed = 70; // 모터의 초기 제어 속도를 70으로 설정
 #define ALTERNATIVE_IR_FEEDBACK_LED_PIN 13  // 수신되는 IR 신호 피드백을 아두이노의 핀 번호 13번으로 설정합니다. LED 출력.
 
 // NEC 프로토콜 기반 코딩어레이 IR 리모컨 명령 코드 목록
-// NEC (Near End Crosstalk) 
 // NEC 프로토콜 코드 예시: 0x00FF45BA
 //-----------------------------------------------------
 // 이 구조는 4부분으로 나뉘어져 있습니다:

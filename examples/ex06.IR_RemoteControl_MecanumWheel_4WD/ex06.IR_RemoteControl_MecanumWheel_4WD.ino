@@ -1,7 +1,7 @@
 // ---------------------------------------------------------------------------
 // Created by Coding Array - we@CodingArray.cc
 // Copyright 2024 License: GNU GPL v3 http://www.gnu.org/licenses/gpl-3.0.html
-// IR RemoteControl Example for 4WD Mecanum Wheel
+// IR Remote Control Example for 4WD Mecanum Wheel
 // ---------------------------------------------------------------------------
 
 #include <CA_MotorShield.h>
@@ -52,7 +52,6 @@ uint16_t controlSpeed = 70; // 모터의 초기 제어 속도를 70으로 설정
 #define ALTERNATIVE_IR_FEEDBACK_LED_PIN 13  // 수신되는 IR 신호 피드백을 아두이노의 핀 번호 13번으로 설정합니다. LED 출력.
 
 // NEC 프로토콜 기반 코딩어레이 IR 리모컨 명령 코드 목록
-// NEC (Near End Crosstalk) 
 // NEC 프로토콜 코드 예시: 0x00FF45BA
 //-----------------------------------------------------
 // 이 구조는 4부분으로 나뉘어져 있습니다:
@@ -286,7 +285,7 @@ void setMotorsDirection(uint8_t direction, uint16_t speed) {
     motor4->run(BACKWARD);
     setMotorsSpeed(speed);  // 지정된 속도로 모터의 속도를 조절합니다.
   } else if (direction == CMD_CURVED_LEFT) {
-    // 곡선 이동 좌측 명령을 받으면 1번과 2번 모터를 앞으로 설정, 3번과 4번 모터는 정지 상태를 유지합니다.
+    // 좌측 곡선 이동 명령을 받으면 1번과 2번 모터를 앞으로 설정, 3번과 4번 모터는 정지 상태를 유지합니다.
     motor1->run(FORWARD);
     motor2->run(FORWARD);
     motor3->run(RELEASE);
@@ -296,7 +295,7 @@ void setMotorsDirection(uint8_t direction, uint16_t speed) {
     //motor3->setSpeed(0);
     //motor4->setSpeed(0);
   } else if (direction == CMD_CURVED_RIGHT) {
-    // 곡선 이동 우측 명령을 받으면 3번과 4번 모터를 앞으로 설정, 1번과 2번 모터는 정지 상태를 유지합니다.
+    // 우측 곡선 이동 명령을 받으면 3번과 4번 모터를 앞으로 설정, 1번과 2번 모터는 정지 상태를 유지합니다.
     motor1->run(RELEASE);
     motor2->run(RELEASE);
     motor3->run(FORWARD);
@@ -306,7 +305,7 @@ void setMotorsDirection(uint8_t direction, uint16_t speed) {
     motor3->setSpeed(speed);  // 지정된 속도로 3번 모터의 속도를 조절합니다.
     motor4->setSpeed(speed);  // 지정된 속도로 4번 모터의 속도를 조절합니다.
   } else if (direction == CMD_LATERAL_ARC_LEFT) {
-    // 측면 아크 이동 좌측 명령을 받으면 1번 모터를 앞으로, 4번 모터를 뒤로 설정, 2번과 3번 모터는 정지 상태를 유지합니다.
+    // 좌측 아크 이동 명령을 받으면 1번 모터를 앞으로, 4번 모터를 뒤로 설정, 2번과 3번 모터는 정지 상태를 유지합니다.
     motor1->run(FORWARD);
     motor2->run(RELEASE);
     motor3->run(RELEASE);
@@ -316,7 +315,7 @@ void setMotorsDirection(uint8_t direction, uint16_t speed) {
     //motor3->setSpeed(0);
     motor4->setSpeed(speed);  // 지정된 속도로 4번 모터의 속도를 조절합니다.
   } else if (direction == CMD_LATERAL_ARC_RIGHT) {
-    // 측면 아크 이동 우측 명령을 받으면 1번 모터를 뒤로, 4번 모터를 앞으로 설정, 2번과 3번 모터는 정지 상태를 유지합니다.
+    // 우측 아크 이동 명령을 받으면 1번 모터를 뒤로, 4번 모터를 앞으로 설정, 2번과 3번 모터는 정지 상태를 유지합니다.
     motor1->run(BACKWARD);
     motor2->run(RELEASE);
     motor3->run(RELEASE);
